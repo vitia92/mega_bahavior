@@ -10,6 +10,7 @@ namespace common\components;
 
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
+use yii\helpers\VarDumper;
 
 class Mega extends ActiveRecord
 {
@@ -33,6 +34,8 @@ class MegaBehavior extends Behavior
     protected $models = [];
     protected $class_name = [];
     public $mega;
+
+    private $delete_models;
 
     public function attach($owner)
     {
@@ -90,14 +93,23 @@ class MegaBehavior extends Behavior
         if($this->class_name){
             foreach($this->class_name as $one_class){
                 $model = \Yii::createObject($one_class);
-                $model::deleteAll(['entity_id' => $this->owner->id]);
+                $this->delete_models = $model::find()->where(['entity_id' => $this->owner->id])->all();
+                $this->delete_all_models();
             }
         }
     }
 
-    private function _save_changes(){
+    public function delete_all_models()
+    {
+        if($this->delete_models){
+            foreach($this->delete_models as $model){
+                $model->delete();
+            }
+        }
+    }
+
+    protected function _save_changes(){
         if($this->models){
-            $this->afterDelete();
             foreach($this->models as $model){
                 $model->entity_id = $this->owner->id;
                 $model->save();
@@ -113,18 +125,25 @@ class MegaBehavior extends Behavior
                 if($models = \Yii::$app->request->post($bace_class_name, false)){
                     if(isset($models[0])){
                         foreach($models as $k => $val){
-                            $model = \Yii::createObject($class_name);
-                            $model->attributes = $val;
-                            if($model->validate()) $this->models[] = $model;
+                            $this->AddModelToArray($class_name,$val);
                         }
                     }else{
-                        $model = \Yii::createObject($class_name);
-                        $model->attributes = $models;
-                        if($model->validate()) $this->models[] = $model;
+                        $this->AddModelToArray($class_name,$models);
                     }
                 }
             }
         }
     }
+
+    protected function AddModelToArray($class_name,$val)
+    {
+        if(isset($val['id'])){
+            $model = $class_name::find()->where(['id'=>$val['id']])->one();
+            if(!$model) $model = \Yii::createObject($class_name);
+        }else $model = \Yii::createObject($class_name);
+        $model->attributes = $val;
+        if($model->validate()) $this->models[] = $model;
+    }
+
 
 }
