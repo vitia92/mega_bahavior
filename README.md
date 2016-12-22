@@ -23,4 +23,6 @@
     
  Во вьюхах вызываем таким образом:
  
- $form->field($model->mega->UserInfo[0], 'surname')->textInput()
+     $form->field($model->mega->UserInfo[0], 'surname')->textInput()
+
+Если бутете находить косяки, то пишите в коментах, буду фиксить))))
