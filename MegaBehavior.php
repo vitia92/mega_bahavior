@@ -99,6 +99,7 @@ class MegaBehavior extends Behavior
         }
     }
 
+
     public function delete_all_models()
     {
         if($this->delete_models){
