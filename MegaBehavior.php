@@ -36,6 +36,7 @@ class MegaBehavior extends Behavior
     public $mega;
 
     private $delete_models;
+    private $not_deleted_models = [];
 
     public function attach($owner)
     {
@@ -99,7 +100,6 @@ class MegaBehavior extends Behavior
         }
     }
 
-
     public function delete_all_models()
     {
         if($this->delete_models){
@@ -114,7 +114,14 @@ class MegaBehavior extends Behavior
             foreach($this->models as $model){
                 $model->entity_id = $this->owner->id;
                 $model->save();
+                $this->not_deleted_models[\yii\helpers\StringHelper::basename($model::className())][] = $model->id;
             }
+            foreach($this->attach_class as $one_el){
+                $bace_class_name = \yii\helpers\StringHelper::basename($one_el);
+                $model = \Yii::createObject($one_el);
+                $model::deleteAll('NOT id  IN ('.implode(",",$this->not_deleted_models[$bace_class_name]).")");
+            }
+
         }
     }
 
