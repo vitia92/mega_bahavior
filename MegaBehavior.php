@@ -112,14 +112,17 @@ class MegaBehavior extends Behavior
     protected function _save_changes(){
         if($this->models){
             foreach($this->models as $model){
+                $bace_class_name = \yii\helpers\StringHelper::basename($model::className());
                 $model->entity_id = $this->owner->id;
                 $model->save();
-                $this->not_deleted_models[\yii\helpers\StringHelper::basename($model::className())][] = $model->id;
+                $this->not_deleted_models[$bace_class_name][] = $model->id;
             }
             foreach($this->attach_class as $one_el){
                 $bace_class_name = \yii\helpers\StringHelper::basename($one_el);
                 $model = \Yii::createObject($one_el);
-                $model::deleteAll('NOT id  IN ('.implode(",",$this->not_deleted_models[$bace_class_name]).")");
+                if(isset($this->not_deleted_models[$bace_class_name]) && $this->not_deleted_models[$bace_class_name]){
+                    $model::deleteAll('entity_id='.$this->owner->id.' AND NOT id  IN ('.implode(",",$this->not_deleted_models[$bace_class_name]).")");
+                }
             }
 
         }
